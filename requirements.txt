@@ -1,0 +1,5 @@
+reduct-py
+miniopy-async
+influxdb-client
+python-dotenv
+tqdm
