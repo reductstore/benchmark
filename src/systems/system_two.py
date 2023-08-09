@@ -96,11 +96,13 @@ class SystemTwo(BaseSystem):
         """Retrieve the last object from MinIO based on filenames recorded in InfluxDB."""
         # Read object name from InfluxDB
         query = f'from(bucket: "{INFLUXDB_BUCKET}") \
-            |> range(start: -1s) \
+            |> range(start: -10s) \
             |> filter(fn: (r) => r._measurement == "{INFLUXDB_MEASUREMENT}") \
             |> last()'
 
         result = self.influx_client.query_api().query(query)
+        if not result or not result[0].records:
+            raise ValueError("No records found in InfluxDB.")
         object_name = result[0].records[0]["_value"]
 
         # Get object from Minio
