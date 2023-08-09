@@ -32,6 +32,24 @@ Install the required packages:
 pip install -r requirements.txt
 ```
 
+## Initialization of the databases
+
+To initialize the databases, create copy the .env.example file and rename it to .env.
+
+```bash
+cp .env.example .env
+```
+
+Then, fill in the required fields in the .env file with the appropriate values.
+
+Then, run the following command:
+
+```bash
+docker-compose up -d
+```
+
+The databases will be initialized automatically.
+
 ## Usage
 
 To run the benchmarking script:
