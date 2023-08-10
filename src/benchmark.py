@@ -241,7 +241,7 @@ def parse_arguments():
         "--start_power", type=int, default=10, help="Start power of 2 for blob sizes."
     )
     parser.add_argument(
-        "--end_power", type=int, default=25, help="End power of 2 for blob sizes."
+        "--end_power", type=int, default=20, help="End power of 2 for blob sizes."
     )
     parser.add_argument(
         "--batch_size",
@@ -285,7 +285,7 @@ async def main(
     - start_power : int, default=10
         Start power of 2 for blob sizes.
 
-    - end_power : int, default=25
+    - end_power : int, default=20
         End power of 2 for blob sizes.
 
     - batch_size : int, default=1_000
