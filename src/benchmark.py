@@ -334,9 +334,9 @@ async def main(
         disable=quiet,
     ) as first_pbar:
         for blob_size in blob_sizes:
-            # system_one = await SystemOne.create()
+            system_one = await SystemOne.create()
             system_two = await SystemTwo.create()
-            systems = [system_two]
+            systems = [system_one, system_two]
             with tqdm(
                 total=len(systems),
                 desc=f"Systems",
