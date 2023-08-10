@@ -60,21 +60,41 @@ class SystemTwo(BaseSystem):
 
     async def cleanup(self):
         """Delete Minio and InfluxDB buckets."""
-        # List all objects in Minio bucket
-        objects = await self.minio_client.list_objects(MINIO_BUCKET)
 
-        # Delete all objects in Minio bucket
-        for obj in objects:
-            await self.minio_client.remove_object(MINIO_BUCKET, obj.object_name)
+        # Continuously list and delete objects in Minio bucket until no more objects are found
+        while True:
+            objects = await self.minio_client.list_objects(MINIO_BUCKET)
+            object_list = list(objects)
+            if not object_list:
+                break
 
-        # Delete Minio bucket
-        await self.minio_client.remove_bucket(MINIO_BUCKET)
+            for obj in object_list:
+                try:
+                    await self.minio_client.remove_object(MINIO_BUCKET, obj.object_name)
+                except Exception as e:
+                    print(f"Error removing object {obj.object_name}: {e}")
+                    continue
+
+        # Now that all objects are presumably deleted, delete the Minio bucket
+        try:
+            await self.minio_client.remove_bucket(MINIO_BUCKET)
+        except Exception as e:
+            print(f"Error removing bucket {MINIO_BUCKET}: {e}")
 
         # Find InfluxDB bucket ID
         bucket = self.influx_client.buckets_api().find_bucket_by_name(INFLUXDB_BUCKET)
 
         # Delete InfluxDB bucket
-        self.influx_client.buckets_api().delete_bucket(bucket=bucket)
+        try:
+            self.influx_client.buckets_api().delete_bucket(bucket=bucket)
+        except Exception as e:
+            print(f"Error removing InfluxDB bucket {INFLUXDB_BUCKET}: {e}")
+
+        # Verify InfluxDB bucket deletion
+        if not self.influx_client.buckets_api().find_bucket_by_name(INFLUXDB_BUCKET):
+            print(f"InfluxDB bucket {INFLUXDB_BUCKET} deleted successfully!")
+        else:
+            print(f"Failed to delete InfluxDB bucket {INFLUXDB_BUCKET}.")
 
     async def write_data(self, data, timestamp):
         """Write data to Minio and InfluxDB."""
