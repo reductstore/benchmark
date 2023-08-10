@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import sys
 import time
 import asyncio
 import argparse
@@ -9,7 +10,13 @@ from tqdm import tqdm
 from systems.base_system import BaseSystem
 from systems.system_one import SystemOne
 from systems.system_two import SystemTwo
-from utils import generate_blob, format_size_binary, save_results
+from utils import (
+    generate_blob,
+    format_size_binary,
+    save_results,
+    print_benchmark_params,
+    ask_for_confirmation,
+)
 
 
 async def write_data(system: BaseSystem, blob: bytes, timestamp: int) -> float:
@@ -82,7 +89,7 @@ async def benchmark_system(
     batch_reads: int,
     warmups: int,
     directory: str = "results",
-    verbose: bool = False,
+    quiet: bool = False,
 ):
     """
     Benchmark data writing and reading operations on a given system.
@@ -112,12 +119,11 @@ async def benchmark_system(
         These runs serve as a "warm-up" phase and are not included in the
         final performance metrics.
 
-    - verbose : bool, optional, default False
-        If set to True, the function prints detailed operational output
-        during each step of the benchmarking process.
-
     - directory : str, optional, default "results"
         The directory where the benchmark results will be saved.
+
+    - quiet : bool, optional, default False
+        If set to True, the benchmark will not print any progress information.
 
     Side Effects:
     -------------
@@ -128,7 +134,7 @@ async def benchmark_system(
     Where {system_name} is the name of the benchmarked storage platform.
 
     """
-    if verbose:
+    if not quiet:
         tqdm.write(f"{'=' * 50}")
         tqdm.write(f"Benchmarking {type(system).__name__}...")
         tqdm.write(f"Blob size: {format_size_binary(blob_size)}")
@@ -140,7 +146,7 @@ async def benchmark_system(
 
     try:
         # Warmup
-        if verbose:
+        if not quiet:
             tqdm.write(
                 f"Warming up with {warmups} {'run' if warmups == 1 else 'runs'}..."
             )
@@ -154,10 +160,10 @@ async def benchmark_system(
         # Write and read one blob at a time
         with tqdm(
             total=batch_size,
-            desc=f"Batch writes",
+            desc=f"Write and read operations",
             leave=False,
             position=2,
-            disable=not verbose,
+            disable=quiet,
         ) as third_bar:
             for _ in range(batch_size):
                 blob = generate_blob(blob_size)
@@ -181,7 +187,7 @@ async def benchmark_system(
             desc=f"Batch reads",
             leave=False,
             position=3,
-            disable=not verbose,
+            disable=quiet,
         ) as fourth_bar:
             for _ in range(batch_reads):
                 result, time_read = await read_batch(system, timestamps[0])
@@ -191,7 +197,7 @@ async def benchmark_system(
                 fourth_bar.update()
 
         # Calculate average times
-        if verbose:
+        if not quiet:
             avg_write_time = sum(write_times) / batch_size
             avg_read_time = sum(read_times) / batch_size
             avg_batch_read_time = sum(batch_read_times) / batch_reads
@@ -208,7 +214,7 @@ async def benchmark_system(
             batch_size=1,
             write_times=write_times,
             read_times=read_times,
-            verbose=verbose,
+            quiet=quiet,
         )
         save_results(
             filename=f"{type(system).__name__}_batch_read.csv",
@@ -216,15 +222,15 @@ async def benchmark_system(
             blob_size=blob_size,
             batch_size=batch_size,
             read_times=batch_read_times,
-            verbose=verbose,
+            quiet=quiet,
         )
 
     finally:
         # Clean up the system even if an exception occurs
-        if verbose:
+        if not quiet:
             tqdm.write("Cleaning up...")
         await system.cleanup()
-        if verbose:
+        if not quiet:
             tqdm.write("System cleaned up!")
 
 
@@ -232,25 +238,24 @@ def parse_arguments():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Run the benchmarking script.")
     parser.add_argument(
-        "--blob_sizes",
-        nargs="+",
-        type=int,
-        default=[2**i for i in range(10, 21)],
-        help="List of blob sizes to benchmark.",
+        "--start_power", type=int, default=10, help="Start power of 2 for blob sizes."
+    )
+    parser.add_argument(
+        "--end_power", type=int, default=25, help="End power of 2 for blob sizes."
     )
     parser.add_argument(
         "--batch_size",
         type=int,
-        default=10,
+        default=1_000,
         help="Number of separate blobs to write/read.",
     )
     parser.add_argument(
-        "--num_trials", type=int, default=10, help="Number of trials to run."
+        "--batch_reads", type=int, default=50, help="Number of trials to run."
     )
     parser.add_argument("--warmups", type=int, default=1, help="Number of warmup runs.")
     parser.add_argument(
-        "--verbose",
-        action="store_true",
+        "--quiet",
+        action="store_false",
         default=False,
         help="Print detailed output during runs.",
     )
@@ -264,26 +269,30 @@ def parse_arguments():
 
 
 async def main(
-    blob_sizes: list[int],
+    start_power: int,
+    end_power: int,
     batch_size: int,
     batch_reads: int,
     warmups: int,
     directory: str,
-    verbose: bool,
+    quiet: bool,
 ):
     """
     Benchmark main execution function.
 
     Parameters:
     -----------
-    - blob_sizes : list of int, default=[2**i for i in range(10, 31)]
-        List of data blob sizes, measured in bytes. Each blob size is benchmarked separately.
+    - start_power : int, default=10
+        Start power of 2 for blob sizes.
 
-    - batch_size : int
+    - end_power : int, default=25
+        End power of 2 for blob sizes.
+
+    - batch_size : int, default=1_000
         Total number of blobs written to the system. Each blob is written
         with a unique timestamp.
 
-    - batch_reads : int
+    - batch_reads : int, default=50
         Total number of times the batch is read from the system.
 
     - warmups : int
@@ -294,9 +303,8 @@ async def main(
     - directory : str, optional
         Directory where the results will be saved. Default is "results".
 
-    - verbose : bool, optional
-        If set to True, the function prints detailed operational output
-        during each step of the benchmarking process. Default is False.
+    - quiet : bool, optional
+        If set to True, the benchmark will not print detailed output during runs.
 
     Units of Measurement:
     ---------------------
@@ -306,22 +314,16 @@ async def main(
         - Tebibyte (TiB): 2^40 bytes
     """
     # Calculate the total disk space required for the benchmark
-    total_disk_space = max(blob_sizes) * (batch_size + warmups)
+    blob_sizes = [2**i for i in range(args.start_power, args.end_power + 1)]
 
-    # check disk space on the system for the current directory
-    statvfs = os.statvfs(".")
-    total_disk_space_available = statvfs.f_frsize * statvfs.f_bavail
-
-    if verbose:
-        print(f"Available disk space: {format_size_binary(total_disk_space_available)}")
-        print(f"Disk space required: {format_size_binary(total_disk_space)}")
-
-    # Check if there is enough disk space and margin available (less than 1 GiB)
-    if total_disk_space_available - total_disk_space < 2**30:
-        print("Not enough disk space available.")
-        print("Please free up some disk space and try again.")
-        print("Exiting...")
-        return
+    # Confirm the benchmark parameters
+    print_benchmark_params(
+        blob_sizes,
+        batch_size,
+        batch_reads,
+        warmups,
+    )
+    ask_for_confirmation()
 
     # Run the benchmark
     with tqdm(
@@ -329,10 +331,10 @@ async def main(
         desc="Blob sizes",
         leave=False,
         position=0,
-        disable=not verbose,
+        disable=quiet,
     ) as first_pbar:
         for blob_size in blob_sizes:
-            system_one = await SystemOne.create(blob_size)
+            system_one = await SystemOne.create()
             system_two = await SystemTwo.create()
             systems = [system_one, system_two]
             with tqdm(
@@ -340,7 +342,7 @@ async def main(
                 desc=f"Systems",
                 leave=False,
                 position=1,
-                disable=not verbose,
+                disable=quiet,
             ) as second_pbar:
                 for system in systems:
                     await benchmark_system(
@@ -350,7 +352,7 @@ async def main(
                         batch_reads,
                         warmups,
                         directory,
-                        verbose,
+                        quiet,
                     )
                     second_pbar.update()
             first_pbar.update()
@@ -360,11 +362,12 @@ if __name__ == "__main__":
     args = parse_arguments()
     asyncio.run(
         main(
-            args.blob_sizes,
+            args.start_power,
+            args.end_power,
             args.batch_size,
-            args.num_trials,
+            args.batch_reads,
             args.warmups,
             args.directory,
-            args.verbose,
+            args.quiet,
         )
     )

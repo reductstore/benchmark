@@ -18,15 +18,10 @@ class SystemOne(BaseSystem):
         )
 
     @classmethod
-    async def create(cls, blob_size: int):
+    async def create(cls: int):
         """Create ReductStore bucket."""
         self = cls()
-        settings = BucketSettings(
-            max_block_size=blob_size * 1024,
-            max_block_records=1024,
-            quota_type=None,
-            quota_size=None,
-        )
+        settings = BucketSettings()
         self.bucket: Bucket = await self.client.create_bucket(
             REDUCTSTORE_BUCKET, settings=settings, exist_ok=True
         )
