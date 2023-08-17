@@ -18,7 +18,7 @@ class SystemOne(BaseSystem):
         )
 
     @classmethod
-    async def create(cls: int):
+    async def create(cls):
         """Create ReductStore bucket."""
         self = cls()
         settings = BucketSettings()
@@ -47,3 +47,13 @@ class SystemOne(BaseSystem):
             data: bytes = await record.read_all()
             result.append(data)
         return result
+
+
+        async with self.client as client:
+            bucket = await client.get_bucket(...)
+
+                result = []
+                async for record in self.bucket.query(REDUCTSTORE_ENTRY, start=start):
+                    data: bytes = await record.read_all()
+                    result.append(data)
+                return result
