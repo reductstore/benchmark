@@ -151,8 +151,8 @@ async def benchmark_system(
                 f"Warming up with {warmups} {'run' if warmups == 1 else 'runs'}..."
             )
         for _ in range(warmups):
-            timestamp = int(time.time_ns())
             blob = generate_blob(blob_size)
+            timestamp = time.time_ns()
             _ = await write_data(system, blob, timestamp)
             result, _ = await read_last(system)
             assert result == blob
@@ -167,9 +167,9 @@ async def benchmark_system(
         ) as third_bar:
             for _ in range(batch_size):
                 blob = generate_blob(blob_size)
-                timestamp = int(time.time_ns())
 
                 # Benchmark write and read operations
+                timestamp = time.time_ns()
                 time_write = await write_data(system, blob, timestamp)
                 result, time_read = await read_last(system)
                 assert blob == result

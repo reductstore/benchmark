@@ -8,26 +8,32 @@ import seaborn as sns
 
 sns.set(style="whitegrid")
 
-# %%
-# Create folder for results
 
-save_dir = "results"
+# %%
+# Define constants
+label_system_one = "System 1 (ReductStore)"
+label_system_two = "System 2 (MinIO + InfluxDB)"
+
+read_dir = "../results"
+save_dir = "graphs"
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
 
+
 # %%
 # Import the data
-df1 = pd.read_csv("../results/SystemOne_read_write.csv")
-df1["system"] = "ReductStore"
 
-df2 = pd.read_csv("../results/SystemTwo_read_write.csv")
-df2["system"] = "MinIO + InfluxDB"
+df1 = pd.read_csv(os.path.join(read_dir, "SystemOne_read_write.csv"))
+df1["system"] = label_system_one
 
-df3 = pd.read_csv("../results/SystemOne_batch_read.csv")
-df3["system"] = "ReductStore"
+df2 = pd.read_csv(os.path.join(read_dir, "SystemTwo_read_write.csv"))
+df2["system"] = label_system_two
 
-df4 = pd.read_csv("../results/SystemTwo_batch_read.csv")
-df4["system"] = "MinIO + InfluxDB"
+df3 = pd.read_csv(os.path.join(read_dir, "SystemOne_batch_read.csv"))
+df3["system"] = label_system_one
+
+df4 = pd.read_csv(os.path.join(read_dir, "SystemTwo_batch_read.csv"))
+df4["system"] = label_system_two
 
 df = pd.concat([df1, df2, df3, df4])
 
@@ -37,6 +43,10 @@ df["blob_size"] = df["blob_size"].astype("int")
 df["system"] = df["system"].astype("category")
 df["write_time"] = df["write_time"].astype("float")
 df["read_time"] = df["read_time"].astype("float")
+
+df["total_time"] = df["write_time"] + df["read_time"]
+
+df["total_time_ms"] = df["total_time"] * 1000
 df["write_time_ms"] = df["write_time"] * 1000
 df["read_time_ms"] = df["read_time"] * 1000
 
@@ -65,9 +75,9 @@ def plot_barplot(df, x, y, hue, title, x_label, y_label, save_path):
         x=x,
         y=y,
         hue=hue,
-        estimator=np.mean,
+        estimator="median",
         errorbar=("pi", 50),
-        palette="pastel",
+        palette=["#a5d8ff", "#ffd8a8"],
         width=0.8,
     )
     xlabels = [format_size_binary(item.get_text()) for item in ax.get_xticklabels()]
@@ -119,6 +129,7 @@ plot_barplot(
     save_path=os.path.join(save_dir, "single_read_time.png"),
 )
 
+
 # %%
 # Result for batch read operations
 plot_barplot(
@@ -130,6 +141,33 @@ plot_barplot(
     x_label="Blob Size (bytes)",
     y_label="Read Time (s)",
     save_path=os.path.join(save_dir, "batch_read_time.png"),
+)
+# %%
+
+# %%
+# Result for for batch read operations below 64 KiB
+plot_barplot(
+    df=df[(df["batch_size"] == 1_000) & (df["blob_size"] < 64 * 2**10)],
+    x="blob_size",
+    y="read_time",
+    hue="system",
+    title="Read Time vs Blob Size for Batches of 1000 Blobs",
+    x_label="Blob Size (bytes)",
+    y_label="Read Time (s)",
+    save_path=os.path.join(save_dir, "batch_read_time_small.png"),
+)
+
+# %%
+# Result for for batch read operations above 64 KiB
+plot_barplot(
+    df=df[(df["batch_size"] == 1_000) & (df["blob_size"] >= 64 * 2**10)],
+    x="blob_size",
+    y="read_time",
+    hue="system",
+    title="Read Time vs Blob Size for Batches of 1000 Blobs",
+    x_label="Blob Size (bytes)",
+    y_label="Read Time (s)",
+    save_path=os.path.join(save_dir, "batch_read_time_large.png"),
 )
 
 # %%

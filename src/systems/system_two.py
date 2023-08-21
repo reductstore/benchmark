@@ -48,6 +48,7 @@ class SystemTwo(BaseSystem):
 
         found = await self.minio_client.bucket_exists(MINIO_BUCKET)
         if not found:
+            print("Creating Minio bucket...")
             await self.minio_client.make_bucket(MINIO_BUCKET)
 
         found = self.influx_client.buckets_api().find_bucket_by_name(INFLUXDB_BUCKET)
@@ -63,11 +64,13 @@ class SystemTwo(BaseSystem):
 
         # Continuously list and delete objects in Minio bucket until no more objects are found
         while True:
+            # The `async with aiohttp.ClientSession() as session:` statement is used to create an
+            # asynchronous HTTP client session. It allows you to make HTTP requests and manage
+            # connections in an efficient and concurrent manner.
             objects = await self.minio_client.list_objects(MINIO_BUCKET)
             object_list = list(objects)
             if not object_list:
                 break
-
             for obj in object_list:
                 try:
                     await self.minio_client.remove_object(MINIO_BUCKET, obj.object_name)
@@ -100,7 +103,10 @@ class SystemTwo(BaseSystem):
         """Write data to Minio and InfluxDB."""
         # Write data to Minio
         result = await self.minio_client.put_object(
-            MINIO_BUCKET, str(timestamp), io.BytesIO(data), length=len(data)
+            MINIO_BUCKET,
+            str(timestamp),
+            io.BytesIO(data),
+            length=len(data),
         )
 
         # Write object name to InfluxDB
@@ -143,7 +149,7 @@ class SystemTwo(BaseSystem):
         result = self.influx_client.query_api().query(query)
 
         object_names = [record["_value"] for record in result[0].records]
-
+        print(f"Found {len(object_names)} objects in InfluxDB.")
         # Get objects from Minio
         objects = []
         async with aiohttp.ClientSession() as session:
