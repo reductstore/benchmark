@@ -236,21 +236,33 @@ async def benchmark_system(
 
 def parse_arguments():
     """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(description="Run the benchmarking script.")
-    parser.add_argument(
-        "--start_power", type=int, default=10, help="Start power of 2 for blob sizes."
+    parser = argparse.ArgumentParser(
+        description="""
+    Run the benchmarking script.
+
+    Units of Measurement:
+    ---------------------
+        - Kibibyte (KiB): 2^10 bytes
+        - Mebibyte (MiB): 2^20 bytes
+        - Gibibyte (GiB): 2^30 bytes
+        - Tebibyte (TiB): 2^40 bytes
+    """,
+        formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument(
-        "--end_power", type=int, default=20, help="End power of 2 for blob sizes."
+        "--start-power", type=int, default=10, help="Start power of 2 for blob sizes."
     )
     parser.add_argument(
-        "--batch_size",
+        "--end-power", type=int, default=20, help="End power of 2 for blob sizes."
+    )
+    parser.add_argument(
+        "--batch-size",
         type=int,
         default=1_000,
         help="Number of separate blobs to write/read.",
     )
     parser.add_argument(
-        "--batch_reads", type=int, default=50, help="Number of trials to run."
+        "--batch-reads", type=int, default=50, help="Number of trials to run."
     )
     parser.add_argument("--warmups", type=int, default=1, help="Number of warmup runs.")
     parser.add_argument(
@@ -282,17 +294,17 @@ async def main(
 
     Parameters:
     -----------
-    - start_power : int, default=10
+    - start-power : int, default=10
         Start power of 2 for blob sizes.
 
-    - end_power : int, default=20
+    - end-power : int, default=20
         End power of 2 for blob sizes.
 
-    - batch_size : int, default=1_000
+    - batch-size : int, default=1_000
         Total number of blobs written to the system. Each blob is written
         with a unique timestamp.
 
-    - batch_reads : int, default=50
+    - batch-reads : int, default=50
         Total number of times the batch is read from the system.
 
     - warmups : int
