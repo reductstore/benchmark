@@ -42,7 +42,7 @@ class SystemTwo(BaseSystem):
         )
 
     @classmethod
-    async def create(cls):
+    async def create(cls) -> "SystemTwo":
         """Create Minio and InfluxDB buckets."""
         self = cls()
 
@@ -59,14 +59,10 @@ class SystemTwo(BaseSystem):
 
         return self
 
-    async def cleanup(self):
+    async def cleanup(self) -> None:
         """Delete Minio and InfluxDB buckets."""
-
         # Continuously list and delete objects in Minio bucket until no more objects are found
         while True:
-            # The `async with aiohttp.ClientSession() as session:` statement is used to create an
-            # asynchronous HTTP client session. It allows you to make HTTP requests and manage
-            # connections in an efficient and concurrent manner.
             objects = await self.minio_client.list_objects(MINIO_BUCKET)
             object_list = list(objects)
             if not object_list:
@@ -99,12 +95,12 @@ class SystemTwo(BaseSystem):
         else:
             print(f"Failed to delete InfluxDB bucket {INFLUXDB_BUCKET}.")
 
-    async def write_data(self, data, timestamp):
+    async def write_data(self, data: bytes, timestamp_ns: int) -> None:
         """Write data to Minio and InfluxDB."""
         # Write data to Minio
         result = await self.minio_client.put_object(
             MINIO_BUCKET,
-            str(timestamp),
+            str(timestamp_ns),
             io.BytesIO(data),
             length=len(data),
         )
@@ -114,11 +110,11 @@ class SystemTwo(BaseSystem):
         self.influx_client.write_api(write_options=SYNCHRONOUS).write(
             bucket=INFLUXDB_BUCKET,
             record=point,
-            time=timestamp,
+            time=timestamp_ns,
             write_precision=WritePrecision.NS,
         )
 
-    async def read_last(self):
+    async def read_last(self) -> bytes:
         """Retrieve the last object from MinIO based on filenames recorded in InfluxDB."""
         # Read object name from InfluxDB
         query = f'from(bucket: "{INFLUXDB_BUCKET}") \
@@ -140,11 +136,11 @@ class SystemTwo(BaseSystem):
             )
             return await response.read()
 
-    async def read_batch(self, start):
+    async def read_batch(self, start_ns: int) -> list[bytes]:
         """Retrieve objects from MinIO based on filenames recorded in InfluxDB."""
         # Read object names from InfluxDB
         query = f'from(bucket: "{INFLUXDB_BUCKET}") \
-            |> range(start: {to_rfc3339(start)}) \
+            |> range(start: {to_rfc3339(start_ns)}) \
             |> filter(fn: (r) => r._measurement == "{INFLUXDB_MEASUREMENT}")'
         result = self.influx_client.query_api().query(query)
 
