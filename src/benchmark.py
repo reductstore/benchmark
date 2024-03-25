@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 from systems.base_system import BaseSystem
 from systems.system_one import SystemOne
+from systems.system_three import SystemThree
 from systems.system_two import SystemTwo
 from utils import (
     generate_blob,
@@ -348,7 +349,8 @@ async def main(
         for blob_size in blob_sizes:
             system_one = await SystemOne.create()
             system_two = await SystemTwo.create()
-            systems = [system_one, system_two]
+            system_three = await SystemThree.create()
+            systems = [system_one, system_two, system_three]
             with tqdm(
                 total=len(systems),
                 desc=f"Systems",

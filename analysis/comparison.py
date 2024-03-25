@@ -12,9 +12,10 @@ sns.set(style="whitegrid")
 # %%
 # Define constants
 label_system_one = "System 1 (ReductStore)"
-label_system_two = "System 2 (MinIO + InfluxDB)"
+label_system_two = "System 3 (TimescaleDB)"
 
-read_dir = "../results"
+HERE = os.path.abspath(os.path.dirname(__file__))
+read_dir = f"{HERE}/../results"
 save_dir = "graphs"
 if not os.path.exists(save_dir):
     os.makedirs(save_dir)
@@ -26,13 +27,13 @@ if not os.path.exists(save_dir):
 df1 = pd.read_csv(os.path.join(read_dir, "SystemOne_read_write.csv"))
 df1["system"] = label_system_one
 
-df2 = pd.read_csv(os.path.join(read_dir, "SystemTwo_read_write.csv"))
+df2 = pd.read_csv(os.path.join(read_dir, "SystemThree_read_write.csv"))
 df2["system"] = label_system_two
 
 df3 = pd.read_csv(os.path.join(read_dir, "SystemOne_batch_read.csv"))
 df3["system"] = label_system_one
 
-df4 = pd.read_csv(os.path.join(read_dir, "SystemTwo_batch_read.csv"))
+df4 = pd.read_csv(os.path.join(read_dir, "SystemThree_batch_read.csv"))
 df4["system"] = label_system_two
 
 df = pd.concat([df1, df2, df3, df4])

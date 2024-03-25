@@ -28,6 +28,16 @@ services:
     volumes:
       - ${PWD}/data/influxdb:/var/lib/influxdb
 
+  timescale:
+    image: timescale/timescaledb:latest-pg14
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${TIMESCALE_USER}
+      POSTGRES_PASSWORD: ${TIMESCALE_PASSWORD}
+    volumes:
+      - ${PWD}/data/timescale:/var/lib/postgresql/data
+
   reductstore:
     image: reduct/store:latest
     ports:

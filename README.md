@@ -6,8 +6,9 @@ The results are then saved in a directory for later analysis.
 
 ## Features
 - Multiple Systems: This script can benchmark:
-  - Systeme 1: ReductStore
+  - System 1: ReductStore
   - System 2: MinIO + InfluxDB
+  - System 3: TimescaleDB
 
 - Detailed Benchmarking: Measures the performance of writing and reading individual blobs, as well as batch reading.
 

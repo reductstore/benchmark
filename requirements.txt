@@ -3,3 +3,4 @@ miniopy-async
 influxdb-client
 python-dotenv
 tqdm
+psycopg2
