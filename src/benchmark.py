@@ -3,12 +3,12 @@ import argparse
 import asyncio
 import time
 
-from tqdm import tqdm
-
-from src.systems.influxdb_minio import SystemTwo
-from src.systems.reductstore import SystemOne
-from src.systems.timescaledb import SystemThree
 from systems.base_system import BaseSystem
+from systems.influxdb_minio import InfluxDBMinioSystem
+from systems.mongodb import MongoDBSystem
+from systems.reductstore import ReductStoreSystem
+from systems.timescaledb import TimescaleDBSystem
+from tqdm import tqdm
 from utils import (
     ask_for_confirmation,
     format_size_binary,
@@ -20,6 +20,7 @@ from utils import (
 
 async def write_data(system: BaseSystem, blob: bytes, timestamp: int) -> float:
     """Write data to the system.
+
 
     Parameters:
     -----------
@@ -167,13 +168,13 @@ async def benchmark_system(
 
                 # Benchmark write and read operations
                 timestamp = time.time_ns()
-                time_write = await write_data(system, blob, timestamp)
-                result, time_read = await read_last(system)
+                time_to_write = await write_data(system, blob, timestamp)
+                result, time_to_read = await read_last(system)
                 assert blob == result
 
                 # Save the results
-                write_times.append(time_write)
-                read_times.append(time_read)
+                write_times.append(time_to_write)
+                read_times.append(time_to_read)
                 timestamps.append(timestamp)
 
                 third_bar.update()
@@ -343,10 +344,11 @@ async def main(
         disable=quiet,
     ) as first_pbar:
         for blob_size in blob_sizes:
-            system_one = await SystemOne.create()
-            system_two = await SystemTwo.create()
-            system_three = await SystemThree.create()
-            systems = [system_one, system_two, system_three]
+            system_one = await InfluxDBMinioSystem.create()
+            system_two = await ReductStoreSystem.create()
+            system_three = await TimescaleDBSystem.create()
+            system_four = await MongoDBSystem.create()
+            systems = [system_one, system_two, system_three, system_four]
             with tqdm(
                 total=len(systems),
                 desc="Systems",

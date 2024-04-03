@@ -13,6 +13,9 @@ sns.set_theme(style="whitegrid")
 label_system_one = "ReductStore"
 label_system_two = "TimescaleDB"
 
+filename_system_one = "InfluxDBMinioSystem"
+filename_system_two = "ReductStoreSystem"
+
 HERE = os.path.abspath(os.path.dirname(__file__))
 read_dir = f"{HERE}/../results"
 save_dir = "graphs"
@@ -23,16 +26,16 @@ if not os.path.exists(save_dir):
 # %%
 # Import the data
 
-df1 = pd.read_csv(os.path.join(read_dir, "SystemOne_read_write.csv"))
+df1 = pd.read_csv(os.path.join(read_dir, f"{filename_system_one}_read_write.csv"))
 df1["system"] = label_system_one
 
-df2 = pd.read_csv(os.path.join(read_dir, "SystemThree_read_write.csv"))
+df2 = pd.read_csv(os.path.join(read_dir, f"{filename_system_two}_read_write.csv"))
 df2["system"] = label_system_two
 
-df3 = pd.read_csv(os.path.join(read_dir, "SystemOne_batch_read.csv"))
+df3 = pd.read_csv(os.path.join(read_dir, f"{filename_system_one}_batch_read.csv"))
 df3["system"] = label_system_one
 
-df4 = pd.read_csv(os.path.join(read_dir, "SystemThree_batch_read.csv"))
+df4 = pd.read_csv(os.path.join(read_dir, f"{filename_system_two}_batch_read.csv"))
 df4["system"] = label_system_two
 
 df = pd.concat([df1, df2, df3, df4])
@@ -142,7 +145,6 @@ plot_barplot(
     y_label="Read Time (s)",
     save_path=os.path.join(save_dir, "batch_read_time.png"),
 )
-# %%
 
 # %%
 # Result for for batch read operations below 64 KiB

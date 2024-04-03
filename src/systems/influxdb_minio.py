@@ -1,10 +1,6 @@
 import io
 
 import aiohttp
-from influxdb_client import InfluxDBClient, Point, WritePrecision
-from influxdb_client.client.write_api import SYNCHRONOUS
-from miniopy_async import Minio
-
 from config import (
     INFLUXDB_BUCKET,
     INFLUXDB_ENDPOINT,
@@ -18,25 +14,14 @@ from config import (
     MINIO_IS_SECURE,
     MINIO_SECRET_KEY,
 )
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client.client.write_api import SYNCHRONOUS
+from miniopy_async import Minio
 from systems.base_system import BaseSystem
 from utils import to_rfc3339
 
 
 class InfluxDBMinioSystem(BaseSystem):
-    def __init__(self):
-        """Initialize Minio and InfluxDB clients."""
-        self.minio_client = Minio(
-            endpoint=MINIO_ENDPOINT,
-            access_key=MINIO_ACCESS_KEY,
-            secret_key=MINIO_SECRET_KEY,
-            secure=MINIO_IS_SECURE,
-        )
-        self.influx_client = InfluxDBClient(
-            url=INFLUXDB_ENDPOINT,
-            token=INFLUXDB_TOKEN,
-            org=INFLUXDB_ORG,
-        )
-
     @classmethod
     async def create(cls):
         """Create Minio and InfluxDB buckets."""
@@ -54,6 +39,20 @@ class InfluxDBMinioSystem(BaseSystem):
             )
 
         return self
+
+    def __init__(self):
+        """Initialize Minio and InfluxDB clients."""
+        self.minio_client = Minio(
+            endpoint=MINIO_ENDPOINT,
+            access_key=MINIO_ACCESS_KEY,
+            secret_key=MINIO_SECRET_KEY,
+            secure=MINIO_IS_SECURE,
+        )
+        self.influx_client = InfluxDBClient(
+            url=INFLUXDB_ENDPOINT,
+            token=INFLUXDB_TOKEN,
+            org=INFLUXDB_ORG,
+        )
 
     async def cleanup(self) -> None:
         """Delete Minio and InfluxDB buckets."""

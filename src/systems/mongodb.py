@@ -1,55 +1,56 @@
 from datetime import datetime
+from typing import List
 
 from gridfs import GridFS
-from pymongo import ASCENDING, MongoClient
+from pymongo import MongoClient
 
-from config import (
-    MONGODB_COLLECTION,
-    MONGODB_DATABASE,
-    MONGODB_GRIDFS_BUCKET,
-    MONGODB_URI,
-)
+from config import MONGODB_DATABASE, MONGODB_URI
 from systems.base_system import BaseSystem
 
 
 class MongoDBSystem(BaseSystem):
+    @classmethod
+    async def create(cls):
+        return cls()
+
     def __init__(self):
         self.client = MongoClient(MONGODB_URI)
         self.db = self.client[MONGODB_DATABASE]
-        self.collection = self.db[MONGODB_COLLECTION]
-        self.fs = GridFS(self.db, MONGODB_GRIDFS_BUCKET)
-        self._ensure_indexes()
+        self.setup_database()
 
-    def _ensure_indexes(self):
-        """Ensure that necessary indexes are created."""
-        self.collection.create_index([("timestamp", ASCENDING)])
+    def setup_database(self):
+        if "data" not in self.db.list_collection_names():
+            self.db.create_collection(
+                "data",
+                timeseries={
+                    "timeField": "time",
+                    "metaField": "metadata",
+                    "granularity": "seconds",
+                },
+            )
+        self.fs = GridFS(self.db)
+
+        print("Database setup complete")
 
     async def cleanup(self) -> None:
-        """Cleanup the database by dropping the collection and GridFS bucket."""
-        self.collection.drop()
-        self.db[MONGODB_GRIDFS_BUCKET].chunks.drop()
-        self.db[MONGODB_GRIDFS_BUCKET].files.drop()
+        self.db.drop_collection("data")
 
     async def write_data(self, data: bytes, timestamp_ns: int) -> None:
-        """Write data to MongoDB using GridFS."""
-        timestamp = datetime.fromtimestamp(timestamp_ns / 1_000_000_000)
-        blob_id = self.fs.put(data)
-        self.collection.insert_one({"timestamp": timestamp, "blob_id": blob_id})
+        timestamp = datetime.fromtimestamp(timestamp_ns / 1e9)
+        blob_id = self.fs.put(data, filename=f"blob_{timestamp.isoformat()}")
+        self.db["data"].insert_one(
+            {"time": timestamp, "blob_id": blob_id, "metadata": {}}
+        )
 
     async def read_last(self) -> bytes:
-        """Read the last data blob inserted into MongoDB."""
-        last_record = self.collection.find().sort("timestamp", -1).limit(1)
-        if last_record.count() > 0:
+        last_record = self.db["data"].find().sort("time", -1).limit(1)
+        if self.db["data"].count_documents({}) > 0:
             last_record = last_record[0]
-            return self.fs.get(last_record["blob_id"]).read()
+            blob = self.fs.get(last_record["blob_id"]).read()
+            return blob
         return b""
 
-    async def read_batch(self, start_ns: int) -> list[bytes]:
-        """Read a batch of data starting from a specific timestamp."""
-        start_time = datetime.fromtimestamp(start_ns / 1_000_000_000)
-        cursor = self.collection.find({"timestamp": {"$gte": start_time}})
-        result = []
-        for record in cursor:
-            data = self.fs.get(record["blob_id"]).read()
-            result.append(data)
-        return result
+    async def read_batch(self, start_ns: int) -> List[bytes]:
+        start_time = datetime.fromtimestamp(start_ns / 1e9)
+        cursor = self.db["data"].find({"time": {"$gte": start_time}})
+        return [self.fs.get(record["blob_id"]).read() for record in cursor]

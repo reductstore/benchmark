@@ -9,6 +9,7 @@ The results are then saved in a directory for later analysis.
   - System 1: ReductStore
   - System 2: MinIO + InfluxDB
   - System 3: TimescaleDB
+  - System 4: MongoDB
 
 - Detailed Benchmarking: Measures the performance of writing and reading individual blobs, as well as batch reading.
 
