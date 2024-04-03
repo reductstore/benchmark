@@ -1,6 +1,10 @@
 import io
 
 import aiohttp
+from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client.client.write_api import SYNCHRONOUS
+from miniopy_async import Minio
+
 from config import (
     INFLUXDB_BUCKET,
     INFLUXDB_ENDPOINT,
@@ -14,9 +18,6 @@ from config import (
     MINIO_IS_SECURE,
     MINIO_SECRET_KEY,
 )
-from influxdb_client import InfluxDBClient, Point, WritePrecision
-from influxdb_client.client.write_api import SYNCHRONOUS
-from miniopy_async import Minio
 from systems.base_system import BaseSystem
 from utils import to_rfc3339
 
@@ -140,7 +141,7 @@ class InfluxDBMinioSystem(BaseSystem):
         result = self.influx_client.query_api().query(query)
 
         object_names = [record["_value"] for record in result[0].records]
-        print(f"Found {len(object_names)} objects in InfluxDB.")
+
         # Get objects from Minio
         objects = []
         async with aiohttp.ClientSession() as session:
