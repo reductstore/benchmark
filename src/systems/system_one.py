@@ -1,5 +1,5 @@
 from systems.base_system import BaseSystem
-from reduct import Client, Bucket, BucketSettings
+from reduct import Client, BucketSettings
 
 from config import (
     REDUCTSTORE_ENDPOINT,
