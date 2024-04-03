@@ -11,10 +11,10 @@ sns.set_theme(style="whitegrid")
 # %%
 # Define constants
 label_system_one = "ReductStore"
-label_system_two = "TimescaleDB"
+label_system_two = "MongoDB"
 
-filename_system_one = "InfluxDBMinioSystem"
-filename_system_two = "ReductStoreSystem"
+filename_system_one = "ReductStoreSystem"
+filename_system_two = "MongoDBSystem"
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 read_dir = f"{HERE}/../results"
