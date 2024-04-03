@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-import os
-import sys
 import time
 import asyncio
 import argparse
@@ -43,7 +41,7 @@ async def write_data(system: BaseSystem, blob: bytes, timestamp: int) -> float:
     return end_time - start_time
 
 
-async def read_last(system: BaseSystem) -> (bytes, float):
+async def read_last(system: BaseSystem) -> tuple[bytes, float]:
     """Read the last data from the system.
 
     Parameters:
@@ -62,7 +60,7 @@ async def read_last(system: BaseSystem) -> (bytes, float):
     return result, end_time - start_time
 
 
-async def read_batch(system: BaseSystem, start: int) -> (list[bytes], float):
+async def read_batch(system: BaseSystem, start: int) -> tuple[list[bytes], float]:
     """Read a batch of data from the system.
 
     Parameters:
@@ -161,7 +159,7 @@ async def benchmark_system(
         # Write and read one blob at a time
         with tqdm(
             total=batch_size,
-            desc=f"Write and read operations",
+            desc="Write and read operations",
             leave=False,
             position=2,
             disable=quiet,
@@ -185,7 +183,7 @@ async def benchmark_system(
         # Read all blobs in a batch
         with tqdm(
             total=batch_reads,
-            desc=f"Batch reads",
+            desc="Batch reads",
             leave=False,
             position=3,
             disable=quiet,
@@ -353,7 +351,7 @@ async def main(
             systems = [system_one, system_two, system_three]
             with tqdm(
                 total=len(systems),
-                desc=f"Systems",
+                desc="Systems",
                 leave=False,
                 position=1,
                 disable=quiet,
