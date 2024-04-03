@@ -1,10 +1,9 @@
 from datetime import datetime
 from typing import List
 
+from config import MONGODB_DATABASE, MONGODB_URI
 from gridfs import GridFS
 from pymongo import MongoClient
-
-from config import MONGODB_DATABASE, MONGODB_URI
 from systems.base_system import BaseSystem
 
 
@@ -24,13 +23,10 @@ class MongoDBSystem(BaseSystem):
                 "data",
                 timeseries={
                     "timeField": "time",
-                    "metaField": "metadata",
                     "granularity": "seconds",
                 },
             )
         self.fs = GridFS(self.db)
-
-        print("Database setup complete")
 
     async def cleanup(self) -> None:
         self.db.drop_collection("data")
@@ -38,14 +34,12 @@ class MongoDBSystem(BaseSystem):
     async def write_data(self, data: bytes, timestamp_ns: int) -> None:
         timestamp = datetime.fromtimestamp(timestamp_ns / 1e9)
         blob_id = self.fs.put(data, filename=f"blob_{timestamp.isoformat()}")
-        self.db["data"].insert_one(
-            {"time": timestamp, "blob_id": blob_id, "metadata": {}}
-        )
+        self.db["data"].insert_one({"time": timestamp, "blob_id": blob_id})
 
     async def read_last(self) -> bytes:
-        last_record = self.db["data"].find().sort("time", -1).limit(1)
-        if self.db["data"].count_documents({}) > 0:
-            last_record = last_record[0]
+        last_record_cursor = self.db["data"].find().sort("time", -1).limit(1)
+        last_record = last_record_cursor.next()
+        if last_record:
             blob = self.fs.get(last_record["blob_id"]).read()
             return blob
         return b""
