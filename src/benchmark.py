@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-import time
-import asyncio
 import argparse
+import asyncio
+import time
 
 from tqdm import tqdm
 
+from src.systems.influxdb_minio import SystemTwo
+from src.systems.reductstore import SystemOne
+from src.systems.timescaledb import SystemThree
 from systems.base_system import BaseSystem
-from systems.system_one import SystemOne
-from systems.system_three import SystemThree
-from systems.system_two import SystemTwo
 from utils import (
-    generate_blob,
-    format_size_binary,
-    save_results,
-    print_benchmark_params,
     ask_for_confirmation,
+    format_size_binary,
+    generate_blob,
+    print_benchmark_params,
+    save_results,
 )
 
 
@@ -23,8 +23,6 @@ async def write_data(system: BaseSystem, blob: bytes, timestamp: int) -> float:
 
     Parameters:
     -----------
-    system: BaseSystem
-        The system to write to.
     blob: bytes
         The data to write.
     timestamp: int
@@ -325,7 +323,7 @@ async def main(
         - Tebibyte (TiB): 2^40 bytes
     """
     # Calculate the total disk space required for the benchmark
-    blob_sizes = [2**i for i in range(args.start_power, args.end_power + 1)]
+    blob_sizes = [2**i for i in range(start_power, end_power + 1)]
 
     # Confirm the benchmark parameters
     print_benchmark_params(

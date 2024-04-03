@@ -1,16 +1,18 @@
-from pymongo import MongoClient, ASCENDING
-from gridfs import GridFS
 from datetime import datetime
 
+from gridfs import GridFS
+from pymongo import ASCENDING, MongoClient
+
 from config import (
-    MONGODB_URI,
-    MONGODB_DATABASE,
     MONGODB_COLLECTION,
+    MONGODB_DATABASE,
     MONGODB_GRIDFS_BUCKET,
+    MONGODB_URI,
 )
+from systems.base_system import BaseSystem
 
 
-class SystemFour:
+class MongoDBSystem(BaseSystem):
     def __init__(self):
         self.client = MongoClient(MONGODB_URI)
         self.db = self.client[MONGODB_DATABASE]

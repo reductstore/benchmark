@@ -1,32 +1,28 @@
 import io
-import aiohttp
 
+import aiohttp
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 from miniopy_async import Minio
 
+from config import (
+    INFLUXDB_BUCKET,
+    INFLUXDB_ENDPOINT,
+    INFLUXDB_FIELD,
+    INFLUXDB_MEASUREMENT,
+    INFLUXDB_ORG,
+    INFLUXDB_TOKEN,
+    MINIO_ACCESS_KEY,
+    MINIO_BUCKET,
+    MINIO_ENDPOINT,
+    MINIO_IS_SECURE,
+    MINIO_SECRET_KEY,
+)
 from systems.base_system import BaseSystem
 from utils import to_rfc3339
 
-from config import (
-    MINIO_ENDPOINT,
-    MINIO_ACCESS_KEY,
-    MINIO_SECRET_KEY,
-    MINIO_IS_SECURE,
-    MINIO_BUCKET,
-)
 
-from config import (
-    INFLUXDB_ENDPOINT,
-    INFLUXDB_TOKEN,
-    INFLUXDB_ORG,
-    INFLUXDB_BUCKET,
-    INFLUXDB_MEASUREMENT,
-    INFLUXDB_FIELD,
-)
-
-
-class SystemTwo(BaseSystem):
+class InfluxDBMinioSystem(BaseSystem):
     def __init__(self):
         """Initialize Minio and InfluxDB clients."""
         self.minio_client = Minio(
@@ -42,7 +38,7 @@ class SystemTwo(BaseSystem):
         )
 
     @classmethod
-    async def create(cls) -> "SystemTwo":
+    async def create(cls):
         """Create Minio and InfluxDB buckets."""
         self = cls()
 

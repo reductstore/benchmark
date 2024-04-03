@@ -1,4 +1,6 @@
 import os
+
+
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -35,6 +37,9 @@ TIMESCALE_ENDPOINT = os.getenv("TIMESCALE_ENDPOINT")
 TIMESCALE_USER = os.getenv("TIMESCALE_USER")
 TIMESCALE_PASSWORD = os.getenv("TIMESCALE_PASSWORD")
 TIMESCALE_DATABASE = os.getenv("TIMESCALE_DATABASE")
+TIMESCALE_CONNECTION = "postgresql://{}:{}@{}".format(
+    TIMESCALE_USER, TIMESCALE_PASSWORD, TIMESCALE_ENDPOINT
+)
 
 # MongoDB
 MONGODB_URI = os.getenv("MONGODB_URI")

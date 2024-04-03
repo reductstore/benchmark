@@ -1,8 +1,8 @@
 # %%
 import os
 
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 
 sns.set_theme(style="whitegrid")
@@ -10,8 +10,8 @@ sns.set_theme(style="whitegrid")
 
 # %%
 # Define constants
-label_system_one = "System 1 (ReductStore)"
-label_system_two = "System 3 (TimescaleDB)"
+label_system_one = "ReductStore"
+label_system_two = "TimescaleDB"
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 read_dir = f"{HERE}/../results"

@@ -1,17 +1,16 @@
-from systems.base_system import BaseSystem
-from reduct import Client, BucketSettings
-
 from config import (
-    REDUCTSTORE_ENDPOINT,
     REDUCTSTORE_ACCESS_KEY,
     REDUCTSTORE_BUCKET,
+    REDUCTSTORE_ENDPOINT,
     REDUCTSTORE_ENTRY,
 )
+from reduct import BucketSettings, Client
+from systems.base_system import BaseSystem
 
 
-class SystemOne(BaseSystem):
+class ReductStoreSystem(BaseSystem):
     @classmethod
-    async def create(cls) -> "SystemOne":
+    async def create(cls):
         """Create ReductStore bucket."""
         self = cls()
         settings = BucketSettings()
