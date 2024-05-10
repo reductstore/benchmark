@@ -47,3 +47,14 @@ services:
 
     volumes:
       - ${PWD}/data/reductstore:/data
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - ${PWD}/data/mongodb/db:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+

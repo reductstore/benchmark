@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import List
 
 
 class BaseSystem(ABC):
@@ -25,6 +24,6 @@ class BaseSystem(ABC):
         pass
 
     @abstractmethod
-    async def read_batch(self, start_ns: int) -> List[bytes]:
+    async def read_batch(self, start_ns: int) -> list[bytes]:
         """Read a batch of data starting from a specific timestamp."""
         pass

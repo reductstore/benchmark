@@ -1,32 +1,29 @@
 #!/usr/bin/env python3
-import os
-import sys
-import time
-import asyncio
 import argparse
-
-from tqdm import tqdm
+import asyncio
+import time
 
 from systems.base_system import BaseSystem
-from systems.system_one import SystemOne
-from systems.system_three import SystemThree
-from systems.system_two import SystemTwo
+from systems.influxdb_minio import InfluxDBMinioSystem
+from systems.mongodb import MongoDBSystem
+from systems.reductstore import ReductStoreSystem
+from systems.timescaledb import TimescaleDBSystem
+from tqdm import tqdm
 from utils import (
-    generate_blob,
-    format_size_binary,
-    save_results,
-    print_benchmark_params,
     ask_for_confirmation,
+    format_size_binary,
+    generate_blob,
+    print_benchmark_params,
+    save_results,
 )
 
 
 async def write_data(system: BaseSystem, blob: bytes, timestamp: int) -> float:
     """Write data to the system.
 
+
     Parameters:
     -----------
-    system: BaseSystem
-        The system to write to.
     blob: bytes
         The data to write.
     timestamp: int
@@ -43,7 +40,7 @@ async def write_data(system: BaseSystem, blob: bytes, timestamp: int) -> float:
     return end_time - start_time
 
 
-async def read_last(system: BaseSystem) -> (bytes, float):
+async def read_last(system: BaseSystem) -> tuple[bytes, float]:
     """Read the last data from the system.
 
     Parameters:
@@ -62,7 +59,7 @@ async def read_last(system: BaseSystem) -> (bytes, float):
     return result, end_time - start_time
 
 
-async def read_batch(system: BaseSystem, start: int) -> (list[bytes], float):
+async def read_batch(system: BaseSystem, start: int) -> tuple[list[bytes], float]:
     """Read a batch of data from the system.
 
     Parameters:
@@ -161,7 +158,7 @@ async def benchmark_system(
         # Write and read one blob at a time
         with tqdm(
             total=batch_size,
-            desc=f"Write and read operations",
+            desc="Write and read operations",
             leave=False,
             position=2,
             disable=quiet,
@@ -171,13 +168,13 @@ async def benchmark_system(
 
                 # Benchmark write and read operations
                 timestamp = time.time_ns()
-                time_write = await write_data(system, blob, timestamp)
-                result, time_read = await read_last(system)
+                time_to_write = await write_data(system, blob, timestamp)
+                result, time_to_read = await read_last(system)
                 assert blob == result
 
                 # Save the results
-                write_times.append(time_write)
-                read_times.append(time_read)
+                write_times.append(time_to_write)
+                read_times.append(time_to_read)
                 timestamps.append(timestamp)
 
                 third_bar.update()
@@ -185,7 +182,7 @@ async def benchmark_system(
         # Read all blobs in a batch
         with tqdm(
             total=batch_reads,
-            desc=f"Batch reads",
+            desc="Batch reads",
             leave=False,
             position=3,
             disable=quiet,
@@ -327,7 +324,7 @@ async def main(
         - Tebibyte (TiB): 2^40 bytes
     """
     # Calculate the total disk space required for the benchmark
-    blob_sizes = [2**i for i in range(args.start_power, args.end_power + 1)]
+    blob_sizes = [2**i for i in range(start_power, end_power + 1)]
 
     # Confirm the benchmark parameters
     print_benchmark_params(
@@ -347,13 +344,14 @@ async def main(
         disable=quiet,
     ) as first_pbar:
         for blob_size in blob_sizes:
-            system_one = await SystemOne.create()
-            system_two = await SystemTwo.create()
-            system_three = await SystemThree.create()
-            systems = [system_one, system_two, system_three]
+            system_one = await InfluxDBMinioSystem.create()
+            system_two = await ReductStoreSystem.create()
+            system_three = await TimescaleDBSystem.create()
+            system_four = await MongoDBSystem.create()
+            systems = [system_one, system_two, system_three, system_four]
             with tqdm(
                 total=len(systems),
-                desc=f"Systems",
+                desc="Systems",
                 leave=False,
                 position=1,
                 disable=quiet,

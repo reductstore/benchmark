@@ -4,3 +4,4 @@ influxdb-client
 python-dotenv
 tqdm
 psycopg2
+pymongo
