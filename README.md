@@ -57,32 +57,16 @@ The databases will be initialized automatically.
 To run the benchmarking script:
 
 ```bash
-python src/benchmark.py --blob_sizes [BLOB_SIZES] --batch_size [BATCH_SIZE] --num_trials [NUM_TRIALS] --warmups [WARMUPS] --verbose --directory [DIRECTORY]
+python src/benchmark.py --start-power [START_POWER] --end-power [END_POWER]--batch-size [BATCH_SIZE] --batch-reads  [NUM_TRIALS] --warmups [WARMUPS]   --quiet  --directory [DIRECTORY]
 ```
 
---blob_sizes (optional):
-- Description: List of blob sizes for benchmarking.
-- Default: from 1KB to 1MB in 10 steps.
-
---batch_size (optional):
-- Description: Number of separate blobs to write/read.
-- Default: 10.
-
---num_trials (optional):
-- Description: Number of benchmarking trials to execute.
-- Default: 10.
-
---warmups (optional):
-- Description: Number of warmup runs before starting the benchmark.
-- Default: 1.
-
---verbose (optional):
-- Description: Provides detailed output during the benchmarking runs.
-- Default: False.
-
---directory (optional):
-- Description: Specifies the directory to save the results.
-- Default: "results".
+Default values:
+```
+Blob sizes: 1 KiB, 2 KiB, 4 KiB, ..., 1 MiB
+Batch size: 1000
+Batch reads: 50
+Warmups: 1
+```
 
 ## Contributing
 If you'd like to contribute to the benchmark project, please submit a pull request. Ensure that any new systems added adhere to the structure defined in base_system.py.

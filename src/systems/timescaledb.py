@@ -2,10 +2,12 @@ from datetime import datetime
 from typing import List
 
 import psycopg2
-from config import TIMESCALE_CONNECTION, TIMESCALE_DATABASE
+from config import TIMESCALE_DATABASE, TIMESCALE_USER, TIMESCALE_PASSWORD, TIMESCALE_ENDPOINT
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from systems.base_system import BaseSystem
 
+
+TIMESCALE_CONNECTION=f"postgresql://{TIMESCALE_USER}:{TIMESCALE_PASSWORD}@{TIMESCALE_ENDPOINT}"
 
 class TimescaleDBSystem(BaseSystem):
     @classmethod

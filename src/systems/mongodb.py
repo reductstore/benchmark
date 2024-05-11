@@ -1,10 +1,12 @@
 from datetime import datetime
 from typing import List
 
-from config import MONGODB_DATABASE, MONGODB_URI
+from config import MONGODB_DATABASE, MONGODB_USER, MONGODB_PASSWORD, MONGODB_ENDPOINT
 from gridfs import GridFS
 from pymongo import MongoClient
 from systems.base_system import BaseSystem
+
+MONGODB_URI = f"mongodb://{MONGODB_USER}:{MONGODB_PASSWORD}@{MONGODB_ENDPOINT}"
 
 
 class MongoDBSystem(BaseSystem):
